@@ -1,5 +1,4 @@
 import { GetStaticProps } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import Prismic from '@prismicio/client';
 import { ReactElement, useState } from 'react';
@@ -12,6 +11,7 @@ import { getPrismicClient } from '../services/prismic';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
+import Header from '../components/Header';
 
 interface Post {
   uid?: string;
@@ -67,14 +67,7 @@ export default function Home({ postsPagination }: HomeProps): ReactElement {
   }
   return (
     <div className={`${commonStyles.container} ${styles.homeContainer}`}>
-      <div className={styles.image}>
-        <Image
-          src="/spacetraveling-logo.svg"
-          alt="logo"
-          width="240"
-          height="25"
-        />
-      </div>
+      <Header />
       {postsData.results.map(post => {
         return (
           <Link key={post.uid} href={`/post/${post.uid}`}>
