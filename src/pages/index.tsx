@@ -1,7 +1,12 @@
 import { GetStaticProps } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import Prismic from '@prismicio/client';
-import { ReactElement } from 'react';
+import { ReactElement, useState } from 'react';
+import { format } from 'date-fns';
+import ptBR from 'date-fns/locale/pt-BR';
+import * as FiIcons from 'react-icons/fi';
+import ApiSearchResponse from '@prismicio/client/types/ApiSearchResponse';
 
 import { getPrismicClient } from '../services/prismic';
 
@@ -28,50 +33,114 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps): ReactElement {
+  const [postsData, setPostsData] = useState(postsPagination);
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  async function loadMorePosts(next_page: string) {
+    const nextPageData: ApiSearchResponse = await fetch(next_page).then(res =>
+      res.json()
+    );
+
+    const nextPosts = nextPageData.results.map(post => {
+      return {
+        uid: post.uid,
+        first_publication_date: format(
+          new Date(post.last_publication_date),
+          'd MMM yyyy',
+          {
+            locale: ptBR,
+          }
+        ),
+        data: {
+          title: post.data.title,
+          subtitle: post.data.subtitle,
+          author: post.data.author,
+        },
+      };
+    });
+
+    const posts = {
+      next_page: nextPageData.next_page,
+      results: [...postsData.results, ...nextPosts],
+    };
+
+    setPostsData(posts);
+  }
   return (
-    <>
-      <Image
-        src="/spacetraveling-logo.svg"
-        alt="logo"
-        width="240"
-        height="25"
-      />
-      {postsPagination.results.map(post => {
+    <div className={`${commonStyles.container} ${styles.homeContainer}`}>
+      <div className={styles.image}>
+        <Image
+          src="/spacetraveling-logo.svg"
+          alt="logo"
+          width="240"
+          height="25"
+        />
+      </div>
+      {postsData.results.map(post => {
         return (
-          <div>
-            <h1>{post.data.title}</h1>
-          </div>
+          <Link key={post.uid} href={`/post/${post.uid}`}>
+            <a className={styles.homePost}>
+              <h1>{post.data.title}</h1>
+              <p>{post.data.subtitle}</p>
+              <div className={styles.postDetails}>
+                <div className={styles.details}>
+                  <FiIcons.FiCalendar />
+                  {post.first_publication_date}
+                </div>
+                <div className={styles.details}>
+                  <FiIcons.FiUser />
+                  {post.data.author}
+                </div>
+              </div>
+            </a>
+          </Link>
         );
       })}
-    </>
+      {postsData.next_page ? (
+        <button
+          onClick={() => loadMorePosts(postsData.next_page)}
+          type="button"
+        >
+          Carregar mais posts
+        </button>
+      ) : (
+        ''
+      )}
+    </div>
   );
 }
 
 export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
-    Prismic.predicates.at('document.type', 'posts')
+    [Prismic.predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+    }
   );
 
   const posts = postsResponse.results.map(post => {
     return {
       uid: post.uid,
-      first_publication_date: post.last_publication_date,
+      first_publication_date: format(
+        new Date(post.last_publication_date),
+        'd MMM yyyy',
+        {
+          locale: ptBR,
+        }
+      ),
       data: {
         title: post.data.title,
-        substitle: post.data.subtitle,
+        subtitle: post.data.subtitle,
         author: post.data.author,
       },
     };
   });
 
-  console.log(posts);
-
   return {
     props: {
       postsPagination: {
         results: posts,
-        next_page: '',
+        next_page: postsResponse.next_page,
       },
     },
   };

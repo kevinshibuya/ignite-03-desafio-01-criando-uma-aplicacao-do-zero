@@ -1,1 +1,54 @@
-// TODO
+.homeContainer {
+  .image {
+    margin: 3rem 0;
+  }
+
+  button {
+    color: var(--highlight);
+    font-size: 1.125rem;
+    margin-top: 3rem;
+  }
+}
+
+.homePost {
+  & + .homePost {
+    margin-top: 3rem;
+  }
+
+  &:hover {
+    h1 {
+      color: var(--highlight);
+    }
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+    transition: color 0.2s;
+  }
+
+  p {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+  }
+
+  .postDetails {
+    display: flex;
+  }
+
+  .details {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--info);
+    text-transform: capitalize;
+
+    & + .details {
+      margin-left: 1rem;
+    }
+
+    svg {
+      margin: auto 0.4rem auto auto;
+    }
+  }
+}
